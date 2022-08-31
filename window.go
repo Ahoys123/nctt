@@ -39,32 +39,32 @@ func (w *Window) ChannelEvents() (evChan chan tcell.Event, quit chan struct{}) {
 	return
 }
 
-func (w *Window) DrawBoxAround(r *Rect, style tcell.Style) {
+func (w *Window) DrawBoxAround(r *Rect, s style) {
 
-	w.Screen.SetContent(r.x-1, r.y-1, '•', nil, style)
-	w.Screen.SetContent(r.x+r.w, r.y-1, '•', nil, style)
-	w.Screen.SetContent(r.x-1, r.y+r.h, '•', nil, style)
-	w.Screen.SetContent(r.x+r.w, r.y+r.h, '•', nil, style)
+	w.SetContent(r.x-1, r.y-1, '•', s)
+	w.SetContent(r.x+r.w, r.y-1, '•', s)
+	w.SetContent(r.x-1, r.y+r.h, '•', s)
+	w.SetContent(r.x+r.w, r.y+r.h, '•', s)
 
 	for x := r.x; x < r.x+r.w; x++ {
-		w.Screen.SetContent(x, r.y-1, '-', nil, style)
-		w.Screen.SetContent(x, r.y+r.h, '-', nil, style)
+		w.SetContent(x, r.y-1, '-', s)
+		w.SetContent(x, r.y+r.h, '-', s)
 	}
 	for y := r.y; y < r.y+r.h; y++ {
-		w.Screen.SetContent(r.x-1, y, '|', nil, style)
-		w.Screen.SetContent(r.x+r.w, y, '|', nil, style)
+		w.SetContent(r.x-1, y, '|', s)
+		w.SetContent(r.x+r.w, y, '|', s)
 	}
 }
 
-func (w *Window) DrawText(text string, r *Rect, style tcell.Style) {
-	w.DrawTextOffset(text, r, 0, style)
+func (w *Window) DrawText(text string, r *Rect, s style) {
+	w.DrawTextOffset(text, r, 0, s)
 }
 
 func (w *Window) MarginRect(x, y, height int) *Rect {
 	return &Rect{w.DrawableRect.x + x + 1, w.DrawableRect.y + y + 1, w.DrawableRect.w - 1 - (w.DrawableRect.x + x + 1), height}
 }
 
-func (w *Window) DrawTextOffset(text string, r *Rect, offset int, style tcell.Style) {
+func (w *Window) DrawTextOffset(text string, r *Rect, offset int, s style) {
 	textRune := []rune(text)
 	curChar := 0
 
@@ -90,7 +90,7 @@ func (w *Window) DrawTextOffset(text string, r *Rect, offset int, style tcell.St
 			return
 		}
 
-		w.Screen.SetContent(r.x+x, r.y+y, textRune[curChar], nil, style)
+		w.SetContent(r.x+x, r.y+y, textRune[curChar], s)
 		curChar++
 	}
 }
@@ -98,18 +98,23 @@ func (w *Window) DrawTextOffset(text string, r *Rect, offset int, style tcell.St
 func (w *Window) FillRect(with rune, r *Rect) {
 	for x := r.x; x < r.x+r.w; x++ {
 		for y := r.y; y < r.y+r.h; y++ {
-			w.Screen.SetContent(x, y, with, nil, tcell.StyleDefault)
+			w.SetContent(x, y, with, normal)
 		}
 	}
 }
 
 func (w *Window) DrawOverlay() {
-	w.DrawText("[SPACE] to advance", &Rect{0, 0, 18, 1}, tcell.StyleDefault.Foreground(tcell.ColorYellow))
-	w.DrawText("[ESCAPE] to title", &Rect{w.width - 17, 0, 17, 1}, tcell.StyleDefault.Foreground(tcell.ColorYellow))
+	w.DrawText("[SPACE] to advance", &Rect{0, 0, 18, 1}, option)
+	w.DrawText("[ESCAPE] to title", &Rect{w.width - 17, 0, 17, 1}, option)
 }
 
 func (w *Window) DrawDebug(text string, y int) {
-	w.DrawText(text, &Rect{1, y, 100, 10}, tcell.StyleDefault.Foreground(tcell.ColorPurple))
+	w.DrawText(text, &Rect{1, y, 100, 10}, normal)
+}
+
+func (w *Window) GetContent(x, y int) (rune, style) {
+	a, _, b, _ := w.Screen.GetContent(x, y)
+	return a, tcellToStyle(b)
 }
 
 func (w *Window) ResolutionCheck(e *tcell.EventResize, old *VirtualRegion) *VirtualRegion {
@@ -131,5 +136,90 @@ func (w *Window) ResolutionCheck(e *tcell.EventResize, old *VirtualRegion) *Virt
 }
 
 func (w *Window) displayResolutionWarning(width, height int) {
-	w.DrawText("79x20 is min size.\nPlease expand your terminal.", &Rect{0, 0, width, height}, tcell.StyleDefault)
+	w.DrawText("79x20 is min size.\nPlease expand your terminal.", &Rect{0, 0, width, height}, normal)
+}
+
+func (w *Window) SetContent(x, y int, r rune, s style) {
+	var st tcell.Style
+	switch s {
+	case normal:
+		st = tcell.StyleDefault
+	case option:
+		st = tcell.StyleDefault.Foreground(tcell.ColorYellow)
+
+	case popup:
+		st = tcell.StyleDefault.Foreground(tcell.ColorTurquoise)
+
+	case popupBox:
+		st = tcell.StyleDefault.Foreground(tcell.ColorDarkTurquoise)
+
+	case t1ln:
+		st = tcell.StyleDefault.Foreground(tcell.ColorGoldenrod)
+
+	case t1en:
+		st = tcell.StyleDefault.Foreground(tcell.ColorPink)
+
+	case t1ne:
+		st = tcell.StyleDefault.Foreground(tcell.ColorRed)
+
+	case t2ne:
+		st = tcell.StyleDefault.Foreground(tcell.ColorBlue)
+	}
+
+	w.Screen.SetContent(x, y, r, nil, st)
+}
+
+type style uint8
+
+const (
+	normal style = iota
+	option
+	popup
+	popupBox
+	t1ln
+	t1en
+	t1ne
+	t2ne
+)
+
+func tcellToStyle(s tcell.Style) style {
+	switch s {
+	case tcell.StyleDefault:
+		return normal
+	case tcell.StyleDefault.Foreground(tcell.ColorYellow):
+		return option
+	case tcell.StyleDefault.Foreground(tcell.ColorTurquoise):
+		return popup
+	case tcell.StyleDefault.Foreground(tcell.ColorDarkTurquoise):
+		return popupBox
+	case tcell.StyleDefault.Foreground(tcell.ColorGoldenrod):
+		return t1ln
+	case tcell.StyleDefault.Foreground(tcell.ColorPink):
+		return t1en
+	case tcell.StyleDefault.Foreground(tcell.ColorRed):
+		return t1ne
+	case tcell.StyleDefault.Foreground(tcell.ColorBlue):
+		return t2ne
+	}
+	return normal
+}
+
+func (w *Window) HideCursor() {
+	w.Screen.HideCursor()
+}
+
+func (w *Window) ShowCursor(x, y int) {
+	w.Screen.ShowCursor(x, y)
+}
+
+func (w *Window) Show() {
+	w.Screen.Show()
+}
+
+func (w *Window) Fini() {
+	w.Screen.Fini()
+}
+
+func (w *Window) Sync() {
+	w.Screen.Sync()
 }

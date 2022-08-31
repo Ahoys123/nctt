@@ -33,18 +33,18 @@ updateloop:
 				inputs = nil
 			}
 
-			w.Screen.Show()
+			w.Show()
 		case e := <-evChan:
 			inputs = append(inputs, e)
 			switch ev := e.(type) {
 			case *tcell.EventResize:
 				saved = w.ResolutionCheck(ev, saved)
-				w.Screen.Sync()
+				w.Sync()
 			case *tcell.EventKey:
 
 				switch ev.Key() {
 				case tcell.KeyCtrlC:
-					w.Screen.Fini()
+					w.Fini()
 					close(quit)
 					break updateloop
 				case tcell.KeyEsc:
@@ -54,45 +54,6 @@ updateloop:
 			}
 		}
 	}
-}
-
-func GetMainScene(w *Window) Element {
-	click := NewSoundEffect("assets/click.wav")
-	ding := NewSoundEffect("assets/ding.wav")
-
-	return NewDiscretePlayer([]Element{
-
-		// INTRODUCTION
-		NewSequentialPlayer([]Element{
-			NewTypewritter("\tWelcome Private! You've been conscripted into the army. Due to your background, you have been assigned to a top secret group; the Navajo Code Talkers.",
-				w.MarginRect(0, 0, 2), w, click, ding),
-
-			NewTypewritter("How to navigate:\n\t• Press [SPACE] to speed up text and advance\n\t• Press [ESC] to reset the program.",
-				w.MarginRect(0, 7, 3), w, click, ding),
-
-			NewHoverText("\t• Use the mouse to hover over {purple text} for helpful tips.",
-				w.MarginRect(0, 10, 1), ReplaceMap{"purple text": {" You found me! ", tcell.ColorDarkRed}}, w),
-
-			NewTypewritter("These commands are also found the top of the screen.",
-				w.MarginRect(0, 11, 1), w, click, ding),
-			NewWaitForNext(),
-		}),
-
-		// TYPE A CODE TUTORIAL
-		NewSequentialPlayer([]Element{
-			NewTypewritter("LESSON 1:\tTYPE A CODE",
-				w.MarginRect(0, 0, 1), w, click, ding),
-			NewWaitForNext(),
-			NewTypewritter("\tCode talking is NOT speaking Navajo. Someone who understood Navajo would\nhear a random string navajo words. ",
-				w.MarginRect(0, 2, 2), w, click, ding),
-			NewTypewritter("Instead, think of it like spelling something over a phone; \"CAT: C as in Coal, A as in Axe, T as in Tea\".",
-				w.MarginRect(0, 4, 2), w, click, ding),
-			NewHoverText("Except Coal in Navajo is \"tsékǫʼ\", Axe is \"tsénił\", and Tea is \"dééh\".\nSo instead of \"Coal Axe Tea\", you would say \"Tsékǫʼ Tsénił Dééh\" to say {C}{A}{T}.",
-				w.MarginRect(0, 6, 3), master, w),
-			NewWaitForNext(),
-			NewWaitForNext(),
-		}),
-	})
 }
 
 // GetDemoScene gets the demo scene, made for Mrs. Andres & Ms. Burritto
@@ -107,7 +68,7 @@ func GetDemoScene(w *Window) Element {
 		NewSequentialPlayer([]Element{
 			NewHoverText("                  __+--+__,\n                ,/        +-;\n               /            \\\n              |          .___|\n              |       ,_-+  |     ^\n              `\\____--+      \\    ||\n       ____     \\          <^   ^_LL,\n     _/^   \\-;___;-_     ,__;  /|__ |\n    / `- - _-L_     \\    -+___|     =)\n   /_     |    `.    |__/     '-____=)\n  /./    /|      \\    ,___+--/    /\n |  |   / `\\      +--/         ,-+\n/__/   |   `\\             .__-/\n|      |     `-___ __-+--+\nL______;              |\n       \\               \\\nArt by Kelsala",
 				&Rect{(width/2 + 38) / 2, (height-17)/2 + 1, 100, 100}, ReplaceMap{}, w),
-			NewHoverText("[{TOP SECRET}]", w.MarginRect((width-40-12)/2, height/2-2, 1), ReplaceMap{"top secret": {"         ________    |^|_.\n    __--+        \\___|   |\n  _|                     |___,\n /     Navajo Nation         |_ \n/            ._,               +--|^;\n\\       ,_---+ |     (Naabeehó      )\n|       |   <^=__      Bináhásdzo)   \\_,\n |.|^|  |       _|                     |\n     |  |______-                ,_____/`\n     |                  <\\      |\n     |___________,    .__|`|_   .\\\n                 U|-__|      `|_/\n                           .____,\n                         ,_|    |\n                         |____. |\n                              |_|\nArt by Kelsala", tcell.ColorBlue}}, w),
+			NewHoverText("[{TOP SECRET}]", w.MarginRect((width-40-12)/2, height/2-2, 1), ReplaceMap{"top secret": {"         ________    |^|_.\n    __--+        \\___|   |\n  _|                     |___,\n /     Navajo Nation         |_ \n/            ._,               +--|^;\n\\       ,_---+ |     (Naabeehó      )\n|       |   <^=__      Bináhásdzo)   \\_,\n |.|^|  |       _|                     |\n     |  |______-                ,_____/`\n     |                  <\\      |\n     |___________,    .__|`|_   .\\\n                 U|-__|      `|_/\n                           .____,\n                         ,_|    |\n                         |____. |\n                              |_|\nArt by Kelsala", t2ne}}, w),
 			NewTypewritter("How to (Navajo) Code Talk", w.MarginRect((width-40-25)/2, height/2-1, 1), w, click, ding),
 			NewTypewritter("Press [SPACE] to start!", w.MarginRect((width-40-23)/2, height/2, 1), w, click, ding),
 			NewWaitForNext(),
@@ -119,7 +80,7 @@ func GetDemoScene(w *Window) Element {
 			NewTypewritter("How to navigate:\n\t• Press [SPACE] to advance and speed up text\n\t• Press [ESC] to reset the program.",
 				w.MarginRect(0, 5, 3), w, click, ding),
 			NewHoverText("\t• Use the mouse to hover over {colored text} for helpful tips.",
-				w.MarginRect(0, 8, 1), ReplaceMap{"colored text": {" You found me! ", tcell.ColorYellow}}, w),
+				w.MarginRect(0, 8, 1), ReplaceMap{"colored text": {" You found me! ", option}}, w),
 			NewTypewritter("These commands are also found at the top of the screen.",
 				w.MarginRect(0, 9, 1), w, click, ding),
 			NewWaitForNext(),
@@ -218,7 +179,7 @@ func GetDemoScene(w *Window) Element {
 			NewTypewritter("\tUsed on all major island battles, from Guadalcanal to Iwo Jima to\nOkinawa, the talkers were classified for use in potential other wars until\n1968. Their contributions made the Navajo language more well known, and were partially responsible for inspiring new schools on the Navajo reservation\nthat teach Navajo language and culture to this day.",
 				w.MarginRect(0, 10, 5), w, click, ding),
 			NewHoverText("{\tThanks for playing! Please press [SPACE] or [ESC] to reset the simulationfor the next player once you're done reading. Thank you!}",
-				w.MarginRect(0, 16, 2), ReplaceMap{"\tthanks for playing! please press [space] or [esc] to reset the simulationfor the next player once you're done reading. thank you!": {" Ahéheeʼ! ", tcell.ColorBlue}}, w),
+				w.MarginRect(0, 16, 2), ReplaceMap{"\tthanks for playing! please press [space] or [esc] to reset the simulationfor the next player once you're done reading. thank you!": {" Ahéheeʼ! ", t2ne}}, w),
 			NewWaitForNext(),
 		}),
 	})

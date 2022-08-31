@@ -1,7 +1,5 @@
 package main
 
-import "github.com/gdamore/tcell/v2"
-
 type Rect struct {
 	x, y, w, h int
 }
@@ -92,8 +90,7 @@ type loc struct {
 
 type pixel struct {
 	mainc rune
-	combc []rune
-	style tcell.Style
+	s     style
 }
 
 func CopyContent(r *Rect, w *Window) VirtualRegion {
@@ -102,8 +99,8 @@ func CopyContent(r *Rect, w *Window) VirtualRegion {
 	for y := range vr {
 		vr[y] = make([]*pixel, r.w)
 		for x := range vr[y] {
-			mainc, combc, style, _ := w.Screen.GetContent(x+r.x, y+r.y)
-			vr[y][x] = &pixel{mainc, combc, style}
+			mainc, style := w.GetContent(x+r.x, y+r.y)
+			vr[y][x] = &pixel{mainc, style}
 		}
 	}
 
@@ -119,7 +116,7 @@ func (vr VirtualRegion) PasteContent(x, y int, w *Window) {
 	for ny := 0; ny < len(vr); ny++ {
 		for nx := 0; nx < len(vr[ny]); nx++ {
 			px := vr.GetContent(nx, ny)
-			w.Screen.SetContent(x+nx, y+ny, px.mainc, px.combc, px.style)
+			w.SetContent(x+nx, y+ny, px.mainc, px.s)
 		}
 	}
 }
@@ -149,13 +146,5 @@ func (vr VirtualRegion) Equals(other VirtualRegion) bool {
 }
 
 func (px *pixel) Equals(other *pixel) bool {
-	if len(px.combc) != len(other.combc) {
-		return false
-	}
-	for i, comb := range px.combc {
-		if other.combc[i] != comb {
-			return false
-		}
-	}
 	return px.mainc == other.mainc
 }

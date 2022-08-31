@@ -142,7 +142,7 @@ func (st *SlowText) Update(ec []tcell.Event) {
 	if st.playSound && rand.Float32() < 0.5 {
 		st.click.Play()
 	}
-	st.w.Screen.SetContent(st.bound.x+x, st.bound.y+y, st.text[st.curChar], nil, tcell.StyleDefault)
+	st.w.SetContent(st.bound.x+x, st.bound.y+y, st.text[st.curChar], normal)
 	st.curChar++
 }
 
@@ -295,8 +295,8 @@ func (pu *PopUp) Update(ec []tcell.Event) {
 		pu.hovBox = &Rect{pu.mx, pu.my, pu.width, pu.height}
 		pu.repContent = CopyContent(&Rect{pu.hovBox.x - 1, pu.hovBox.y - 1, pu.hovBox.w + 2, pu.hovBox.h + 2}, pu.w)
 		w.FillRect(' ', pu.hovBox)
-		w.DrawBoxAround(pu.hovBox, tcell.StyleDefault.Foreground(tcell.ColorDarkTurquoise))
-		w.DrawText(pu.text, pu.hovBox, tcell.StyleDefault.Foreground(tcell.ColorTurquoise))
+		w.DrawBoxAround(pu.hovBox, popupBox)
+		w.DrawText(pu.text, pu.hovBox, popupBox)
 		pu.showNext = false
 	}
 
@@ -304,11 +304,6 @@ func (pu *PopUp) Update(ec []tcell.Event) {
 		switch ev := ec[0].(type) {
 		case *tcell.EventMouse: // if mouse
 			if pu.hovBox != nil {
-				/*
-					for _, v := range CopyContent(&Rect{pu.hovBox.x - 1, pu.hovBox.y - 1, pu.hovBox.w + 2, pu.hovBox.h + 2}, pu.w).GetDifferences(pu.repContent) {
-						pu.w.Screen.SetContent(v.x+pu.hovBox.x, v.y+pu.hovBox.y, v.pixel.mainc, v.pixel.combc, v.pixel.style)
-					}
-				*/
 				pu.repContent.PasteContent(pu.hovBox.x-1, pu.hovBox.y-1, pu.w)
 				pu.hovBox = nil
 				pu.repContent = nil
@@ -364,7 +359,7 @@ type drawCall struct {
 	text   string
 	rect   *Rect
 	offset int
-	style  tcell.Style
+	style  style
 }
 
 func (dc *drawCall) Draw(w *Window) {
@@ -442,7 +437,7 @@ func (chkr *Checker) Update(ec []tcell.Event) {
 		if chkr.right.Done() {
 			chkr.state = 0
 			chkr.done = true
-			w.Screen.HideCursor()
+			w.HideCursor()
 		}
 		chkr.right.Update(ec)
 		return
@@ -484,7 +479,7 @@ func (chkr *Checker) Done() bool {
 }
 
 func (chkr *Checker) Reset() {
-	w.Screen.HideCursor()
+	w.HideCursor()
 	chkr.chk.Reset()
 	chkr.right.Reset()
 	chkr.wrong.Reset()
@@ -510,7 +505,7 @@ func NewOptions(options []string, r *Rect, w *Window) *Options {
 	row := r.y
 	for _, option := range options {
 		width, height := GetDimensions(option)
-		drawCalls = append(drawCalls, drawCall{option, &Rect{r.x + 2, row, width, height}, 0, tcell.StyleDefault})
+		drawCalls = append(drawCalls, drawCall{option, &Rect{r.x + 2, row, width, height}, 0, normal})
 		row += height + 1
 	}
 	return &Options{options, w, 0, false, drawCalls}
@@ -547,14 +542,14 @@ func (op *Options) Update(ec []tcell.Event) {
 
 	// draw > <
 	selRect := op.drawCalls[op.selected].rect
-	w.Screen.SetContent(selRect.x-2, selRect.y, '>', nil, tcell.StyleDefault.Foreground(tcell.ColorLightYellow))
-	w.Screen.SetContent(selRect.x+selRect.w+1, selRect.y, '<', nil, tcell.StyleDefault.Foreground(tcell.ColorLightYellow))
+	w.SetContent(selRect.x-2, selRect.y, '>', option)
+	w.SetContent(selRect.x+selRect.w+1, selRect.y, '<', option)
 }
 
 func (op *Options) changeIndex(by int) {
 	selRect := op.drawCalls[op.selected].rect
-	w.Screen.SetContent(selRect.x-2, selRect.y, ' ', nil, tcell.StyleDefault)
-	w.Screen.SetContent(selRect.x+selRect.w+1, selRect.y, ' ', nil, tcell.StyleDefault)
+	w.SetContent(selRect.x-2, selRect.y, ' ', normal)
+	w.SetContent(selRect.x+selRect.w+1, selRect.y, ' ', normal)
 
 	if op.selected+by < 0 {
 		op.selected = (op.selected + by + len(op.options)) % len(op.options)
@@ -569,8 +564,8 @@ func (op *Options) Done() bool {
 
 func (op *Options) Reset() {
 	selRect := op.drawCalls[op.selected].rect
-	w.Screen.SetContent(selRect.x-2, selRect.y, ' ', nil, tcell.StyleDefault)
-	w.Screen.SetContent(selRect.x+selRect.w+1, selRect.y, ' ', nil, tcell.StyleDefault)
+	w.SetContent(selRect.x-2, selRect.y, ' ', normal)
+	w.SetContent(selRect.x+selRect.w+1, selRect.y, ' ', normal)
 
 	op.done = false
 	op.selected = 0
@@ -610,7 +605,7 @@ func NewTypewritterInput(uir *Rect, click, ding *SoundEffect) *TextInput {
 
 func (ti *TextInput) Update(ec []tcell.Event) {
 	if ti.done {
-		w.Screen.HideCursor()
+		w.HideCursor()
 		return
 	}
 
@@ -628,9 +623,9 @@ func (ti *TextInput) Update(ec []tcell.Event) {
 				}
 
 				w.FillRect(' ', ti.uir)
-				w.DrawText(string(ti.userText), ti.uir, tcell.StyleDefault)
+				w.DrawText(string(ti.userText), ti.uir, normal)
 				ti.curmx++
-				w.Screen.ShowCursor(ti.uir.x+ti.curmx, ti.uir.y)
+				w.ShowCursor(ti.uir.x+ti.curmx, ti.uir.y)
 			case tcell.KeyBackspace2:
 				ti.selectionReturn = ""
 				if len(ti.userText) == 0 {
@@ -641,8 +636,8 @@ func (ti *TextInput) Update(ec []tcell.Event) {
 				ti.curmx--
 
 				w.FillRect(' ', ti.uir)
-				w.DrawText(string(ti.userText), ti.uir, tcell.StyleDefault)
-				w.Screen.ShowCursor(ti.uir.x+ti.curmx, ti.uir.y)
+				w.DrawText(string(ti.userText), ti.uir, normal)
+				w.ShowCursor(ti.uir.x+ti.curmx, ti.uir.y)
 			case tcell.KeyEnter:
 				ti.selectionReturn = string(ti.userText)
 				if ti.ding != nil {
@@ -663,7 +658,7 @@ func (ti *TextInput) Selection() string {
 }
 
 func (ti *TextInput) Reset() {
-	w.Screen.HideCursor()
+	w.HideCursor()
 	w.FillRect(' ', ti.uir)
 	ti.userText = nil
 	ti.curmx = 0
