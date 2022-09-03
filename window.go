@@ -32,11 +32,58 @@ func NewWindow(width, height int) *Window {
 	return &w
 }
 
-func (w *Window) ChannelEvents() (evChan chan tcell.Event, quit chan struct{}) {
-	evChan = make(chan tcell.Event)
+func (w *Window) ChannelEvents() (evChan chan event, quit chan struct{}) {
+	evChan = make(chan event)
 	quit = make(chan struct{})
-	go w.Screen.ChannelEvents(evChan, quit)
+	go pipeline(evChan, quit)
 	return
+}
+
+func pipeline(evChan chan<- event, quit chan struct{}) {
+	ichan := make(chan tcell.Event)
+	iquit := make(chan struct{})
+	go w.Screen.ChannelEvents(ichan, iquit)
+	for {
+		select {
+		case <-quit:
+			iquit <- struct{}{}
+			close(evChan)
+			close(quit)
+			return
+		case e := <-ichan:
+			evChan <- tcellToEvent(e)
+		}
+	}
+}
+
+func tcellToEvent(e tcell.Event) event {
+	switch ev := e.(type) {
+	case *tcell.EventKey:
+		switch ev.Key() {
+		case tcell.KeyRune:
+			return &keyEvent{ev.Rune()}
+		case tcell.KeyUp:
+			return &specialEvent{up}
+		case tcell.KeyDown:
+			return &specialEvent{down}
+		case tcell.KeyLeft:
+			return &specialEvent{left}
+		case tcell.KeyRight:
+			return &specialEvent{right}
+		case tcell.KeyBackspace2, tcell.KeyBackspace:
+			return &specialEvent{backspace}
+		case tcell.KeyEnter:
+			return &specialEvent{enter}
+		case tcell.KeyCtrlC:
+			return &specialEvent{quit}
+		case tcell.KeyESC:
+			return &specialEvent{reset}
+		}
+	case *tcell.EventMouse:
+		x, y := ev.Position()
+		return &mouseEvent{x, y}
+	}
+	return &keyEvent{}
 }
 
 func (w *Window) DrawBoxAround(r *Rect, s style) {

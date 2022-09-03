@@ -18,9 +18,9 @@ func main() {
 	run(w, evChan, quit)
 }
 
-func run(w *Window, evChan chan tcell.Event, quit chan struct{}) {
+func run(w *Window, evChan chan event, cquit chan struct{}) {
 	ticker := time.NewTicker(time.Millisecond * 100)
-	inputs := []tcell.Event{}
+	inputs := []event{}
 	var saved *VirtualRegion
 
 updateloop:
@@ -40,14 +40,13 @@ updateloop:
 			case *tcell.EventResize:
 				saved = w.ResolutionCheck(ev, saved)
 				w.Sync()
-			case *tcell.EventKey:
-
+			case *specialEvent:
 				switch ev.Key() {
-				case tcell.KeyCtrlC:
+				case quit:
 					w.Fini()
-					close(quit)
+					close(cquit)
 					break updateloop
-				case tcell.KeyEsc:
+				case reset:
 					scene.Reset()
 					w.FillRect(' ', w.DrawableRect)
 				}

@@ -3,15 +3,13 @@ package main
 import (
 	"math/rand"
 	"strings"
-
-	"github.com/gdamore/tcell/v2"
 )
 
 type Element interface {
 	// Update is called every frame and updates the display.
 	// The inputs registered between the last and current
-	// frame will be passed in as an array of tcell.Events.
-	Update([]tcell.Event)
+	// frame will be passed in as an array of events.
+	Update([]event)
 
 	// Done outputs if the element is finished.
 	Done() bool
@@ -31,14 +29,14 @@ func NewWaitForNext() *WaitForNext {
 	return &WaitForNext{false}
 }
 
-func (wfn *WaitForNext) Update(ec []tcell.Event) {
+func (wfn *WaitForNext) Update(ec []event) {
 	if wfn.done {
 		return
 	}
 
 	if len(ec) > 0 { // if input
 		switch ev := ec[0].(type) {
-		case *tcell.EventKey: // if key
+		case *keyEvent: // if key
 			switch ev.Rune() {
 			case ' ': // if space
 				wfn.done = true
@@ -79,7 +77,7 @@ func NewTypewritter(text string, bound *Rect, w *Window, click *SoundEffect, din
 	return &SlowText{[]rune(text), bound, 0, w, false, 0, click, ding, true}
 }
 
-func (st *SlowText) Update(ec []tcell.Event) {
+func (st *SlowText) Update(ec []event) {
 
 	if st.done {
 		return
@@ -87,7 +85,7 @@ func (st *SlowText) Update(ec []tcell.Event) {
 
 	if len(ec) > 0 { // if input
 		switch ev := ec[0].(type) {
-		case *tcell.EventKey: // if key
+		case *keyEvent: // if key
 			switch ev.Rune() {
 			case ' ': // if space
 				if !st.done { // if not displayed
@@ -96,7 +94,7 @@ func (st *SlowText) Update(ec []tcell.Event) {
 					}
 					st.playSound = false
 					for !st.done { // update until it is displayed
-						st.Update([]tcell.Event{})
+						st.Update([]event{})
 					}
 				} else { // if fully displayed
 					st.done = true // we done
@@ -175,7 +173,7 @@ func NewConcurrentPlayer(elms []Element) *ConcurrentPlayer {
 	return &ConcurrentPlayer{elms}
 }
 
-func (cp *ConcurrentPlayer) Update(ec []tcell.Event) {
+func (cp *ConcurrentPlayer) Update(ec []event) {
 	for _, elm := range cp.elms {
 		elm.Update(ec)
 	}
@@ -210,7 +208,7 @@ func NewDiscretePlayer(elms []Element) *DiscretePlayer {
 	return &DiscretePlayer{elms, 0, false}
 }
 
-func (dp *DiscretePlayer) Update(ec []tcell.Event) {
+func (dp *DiscretePlayer) Update(ec []event) {
 
 	if dp.elms[dp.curElmIndex].Done() {
 		dp.elms[dp.curElmIndex].Reset()
@@ -244,7 +242,7 @@ func NewSequentialPlayer(elms []Element) *SequentialPlayer {
 	return &SequentialPlayer{NewDiscretePlayer(elms)}
 }
 
-func (sp *SequentialPlayer) Update(ec []tcell.Event) {
+func (sp *SequentialPlayer) Update(ec []event) {
 	for elmIndex := 0; elmIndex <= sp.curElmIndex; elmIndex++ {
 		sp.elms[elmIndex].Update(ec)
 	}
@@ -279,7 +277,7 @@ func NewPopUp(text string, width, height int, bound *Rect, w *Window) *PopUp {
 	return &PopUp{text, bound, width, height, w, nil, nil, false, 0, 0}
 }
 
-func (pu *PopUp) Update(ec []tcell.Event) {
+func (pu *PopUp) Update(ec []event) {
 
 	if pu.showNext {
 		screenW, screenH := pu.w.width, pu.w.height
@@ -302,7 +300,7 @@ func (pu *PopUp) Update(ec []tcell.Event) {
 
 	if len(ec) > 0 { // if input
 		switch ev := ec[0].(type) {
-		case *tcell.EventMouse: // if mouse
+		case *mouseEvent: // if mouse
 			if pu.hovBox != nil {
 				pu.repContent.PasteContent(pu.hovBox.x-1, pu.hovBox.y-1, pu.w)
 				pu.hovBox = nil
@@ -371,7 +369,7 @@ func NewHoverText(text string, r *Rect, dict Replacer, w *Window) *HoverText {
 	return &HoverText{text, dict, w, hovs, segs, false}
 }
 
-func (ht *HoverText) Update(ec []tcell.Event) {
+func (ht *HoverText) Update(ec []event) {
 	if !ht.done {
 		// draw all text
 		for _, htdc := range ht.drawCalls {
@@ -427,7 +425,7 @@ func NewChecker(chk Checkable, correct []string, right, wrong Element) *Checker 
 	return &Checker{chk, thing, right, wrong, 0, false}
 }
 
-func (chkr *Checker) Update(ec []tcell.Event) {
+func (chkr *Checker) Update(ec []event) {
 	if chkr.done {
 		return
 	}
@@ -511,25 +509,25 @@ func NewOptions(options []string, r *Rect, w *Window) *Options {
 	return &Options{options, w, 0, false, drawCalls}
 }
 
-func (op *Options) Update(ec []tcell.Event) {
+func (op *Options) Update(ec []event) {
 	if op.done {
 		return
 	}
 
 	if len(ec) > 0 { // if input
 		switch ev := ec[0].(type) {
-		case *tcell.EventKey: // if key
+		case *specialEvent: // if key
 			switch ev.Key() {
-			case tcell.KeyUp, tcell.KeyLeft:
+			case up, left:
 				op.changeIndex(-1)
-			case tcell.KeyDown, tcell.KeyRight:
+			case down, right:
 				op.changeIndex(1)
-			case tcell.KeyEnter:
+			case enter:
 				op.done = true
 			}
 
-			switch ev.Rune() {
-			case ' ', 'c':
+		case *keyEvent:
+			if k := ev.Rune(); k == ' ' || k == 'c' {
 				op.done = true
 			}
 		}
@@ -603,7 +601,7 @@ func NewTypewritterInput(uir *Rect, click, ding *SoundEffect) *TextInput {
 	return &TextInput{uir, nil, "", false, 0, click, ding}
 }
 
-func (ti *TextInput) Update(ec []tcell.Event) {
+func (ti *TextInput) Update(ec []event) {
 	if ti.done {
 		w.HideCursor()
 		return
@@ -611,22 +609,22 @@ func (ti *TextInput) Update(ec []tcell.Event) {
 
 	if len(ec) > 0 { // if input
 		switch ev := ec[0].(type) {
-		case *tcell.EventKey: // if key
+		case *keyEvent: // if key
+			ti.selectionReturn = ""
+			r := ev.Rune()
+			ti.userText = append(ti.userText, r)
+
+			if ti.click != nil {
+				ti.click.Play()
+			}
+
+			w.FillRect(' ', ti.uir)
+			w.DrawText(string(ti.userText), ti.uir, normal)
+			ti.curmx++
+			w.ShowCursor(ti.uir.x+ti.curmx, ti.uir.y)
+		case *specialEvent:
 			switch ev.Key() {
-			case tcell.KeyRune:
-				ti.selectionReturn = ""
-				r := ev.Rune()
-				ti.userText = append(ti.userText, r)
-
-				if ti.click != nil {
-					ti.click.Play()
-				}
-
-				w.FillRect(' ', ti.uir)
-				w.DrawText(string(ti.userText), ti.uir, normal)
-				ti.curmx++
-				w.ShowCursor(ti.uir.x+ti.curmx, ti.uir.y)
-			case tcell.KeyBackspace2:
+			case backspace:
 				ti.selectionReturn = ""
 				if len(ti.userText) == 0 {
 					break
@@ -638,7 +636,7 @@ func (ti *TextInput) Update(ec []tcell.Event) {
 				w.FillRect(' ', ti.uir)
 				w.DrawText(string(ti.userText), ti.uir, normal)
 				w.ShowCursor(ti.uir.x+ti.curmx, ti.uir.y)
-			case tcell.KeyEnter:
+			case enter:
 				ti.selectionReturn = string(ti.userText)
 				if ti.ding != nil {
 					ti.ding.Play()
