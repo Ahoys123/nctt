@@ -25,7 +25,7 @@ func NewTermWindow(width, height int) *TermWindow {
 	s.EnableMouse()
 	s.SetStyle(defStyle)
 	s.Clear()
-	w := TermWindow{s, &Rect{0, 1, width, height - 1}, width, height}
+	w := TermWindow{s, &Rect{0, 0, width, height - 1}, width, height}
 
 	DrawOverlay(&w)
 
@@ -35,11 +35,11 @@ func NewTermWindow(width, height int) *TermWindow {
 func (w *TermWindow) ChannelEvents() (evChan chan event, quit chan struct{}) {
 	evChan = make(chan event)
 	quit = make(chan struct{})
-	go pipeline(evChan, quit)
+	go w.pipeline(evChan, quit)
 	return
 }
 
-func pipeline(evChan chan<- event, quit chan struct{}) {
+func (w *TermWindow) pipeline(evChan chan<- event, quit chan struct{}) {
 	ichan := make(chan tcell.Event)
 	iquit := make(chan struct{})
 	go w.Screen.ChannelEvents(ichan, iquit)
@@ -142,19 +142,6 @@ func (w *TermWindow) SetContent(x, y int, r rune, s style) {
 
 	w.Screen.SetContent(x, y, r, nil, st)
 }
-
-type style uint8
-
-const (
-	normal style = iota
-	option
-	popup
-	popupBox
-	t1ln
-	t1en
-	t1ne
-	t2ne
-)
 
 func tcellToStyle(s tcell.Style) style {
 	switch s {

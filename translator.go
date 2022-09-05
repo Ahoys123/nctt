@@ -155,7 +155,7 @@ func (rm ReplaceMap) getColor(text string) style {
 	return rm[strings.ToLower(text)].getColor()
 }
 
-func HoverReplace(textS string, rplcr Replacer, rect *Rect, w *TermWindow) (pus []*PopUp, dcs []drawCall) {
+func HoverReplace(textS string, rplcr Replacer, rect *Rect, w Window) (pus []*PopUp, dcs []drawCall) {
 	text := []rune(textS)
 	start := 0
 	highlight := false

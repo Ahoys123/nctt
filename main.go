@@ -6,19 +6,27 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
-var w *TermWindow
+var w Window
 
 var scene Element
+var evChan chan event
+var cquit chan struct{}
 
 func main() {
-	w = NewTermWindow(79, 20)
-	scene = GetDemoScene(w) //GetMainScene(w)
-
-	evChan, quit := w.ChannelEvents()
-	run(w, evChan, quit)
+	println("v1")
+	w = NewWebWindow(79, 20)
+	scene = GetMainScene(w) //GetMainScene(w)
+	evChan, cquit = w.ChannelEvents()
+	startHTML()
+	<-cquit
 }
 
-func run(w *TermWindow, evChan chan event, cquit chan struct{}) {
+func startHTML() { //this js.Value, args []js.Value) any {
+	run(w, evChan, cquit)
+	//return nil
+}
+
+func run(w Window, evChan chan event, cquit chan struct{}) {
 	ticker := time.NewTicker(time.Millisecond * 100)
 	inputs := []event{}
 	var saved *VirtualRegion
@@ -38,8 +46,8 @@ updateloop:
 			inputs = append(inputs, e)
 			switch ev := e.(type) {
 			case *tcell.EventResize:
-				saved = w.ResolutionCheck(ev, saved)
-				w.Sync()
+				//saved = w.ResolutionCheck(ev, saved)
+				//w.Sync()
 			case *specialEvent:
 				switch ev.Key() {
 				case quit:
@@ -48,7 +56,7 @@ updateloop:
 					break updateloop
 				case reset:
 					scene.Reset()
-					FillRect(' ', w.DrawableRect, w)
+					FillRect(' ', w.GetDrawingRect(), w)
 				}
 			}
 		}
@@ -57,10 +65,10 @@ updateloop:
 
 // GetDemoScene gets the demo scene, made for Mrs. Andres & Ms. Burritto
 // as of April 10, 2022.
-func GetDemoScene(w *TermWindow) Element {
-	click := NewSoundEffect("assets/click.wav")
-	ding := NewSoundEffect("assets/ding.wav")
-	width, height := w.width, w.height
+func GetMainScene(w Window) Element {
+	var click SoundEffect = NewWebSfx("assets/click.wav") //NewSoundEffect("assets/click.wav")
+	var ding SoundEffect = NewWebSfx("assets/ding.wav")   // NewSoundEffect("assets/ding.wav")
+	width, height := w.GetWidth(), w.GetHeight()
 
 	return NewDiscretePlayer([]Element{
 

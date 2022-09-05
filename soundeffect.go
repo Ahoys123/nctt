@@ -12,11 +12,15 @@ import (
 
 var inited bool = false
 
-type SoundEffect struct {
+type SoundEffect interface {
+	Play()
+}
+
+type BeepSfx struct {
 	buffer *beep.Buffer
 }
 
-func NewSoundEffect(filename string) (sfx *SoundEffect) {
+func NewBeepSfx(filename string) (sfx *BeepSfx) {
 	f, err := os.Open(filename)
 	if err != nil {
 		log.Fatal(err)
@@ -32,14 +36,14 @@ func NewSoundEffect(filename string) (sfx *SoundEffect) {
 		inited = true
 	}
 
-	sfx = &SoundEffect{beep.NewBuffer(format)}
+	sfx = &BeepSfx{beep.NewBuffer(format)}
 	sfx.buffer.Append(streamer)
 	streamer.Close()
 
 	return sfx
 }
 
-func (sfx *SoundEffect) Play() {
+func (sfx *BeepSfx) Play() {
 	sound := sfx.buffer.Streamer(0, sfx.buffer.Len())
 	speaker.Play(sound)
 }

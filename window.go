@@ -2,12 +2,16 @@ package main
 
 type Window interface {
 	SetContent(int, int, rune, style)
+	GetContent(int, int) (rune, style)
+	ChannelEvents() (evChan chan event, quit chan struct{})
+
 	GetDrawingRect() *Rect
 	GetWidth() int
 	GetHeight() int
-	GetContent(int, int) (rune, style)
+
 	HideCursor()
 	ShowCursor(int, int)
+
 	Show()
 	Fini()
 	Sync()
@@ -85,4 +89,61 @@ func DrawOverlay(w Window) {
 
 func DrawDebug(text string, y int, w Window) {
 	DrawText(text, &Rect{1, y, 100, 10}, normal, w)
+}
+
+type style uint8
+
+const (
+	normal style = iota
+	option
+	popup
+	popupBox
+	t1ln
+	t1en
+	t1ne
+	t2ne
+)
+
+func (s style) String() string {
+	switch s {
+	case normal:
+		return "normal"
+	case option:
+		return "option"
+	case popup:
+		return "popup"
+	case popupBox:
+		return "popupBox"
+	case t1ln:
+		return "t1ln"
+	case t1en:
+		return "t1en"
+	case t1ne:
+		return "t1ne"
+	case t2ne:
+		return "t2ne"
+	}
+	return "unknown"
+}
+
+func DeString(str string) style {
+	switch str {
+	case "normal":
+		return normal
+	case "option":
+		return option
+	case "popup":
+		return popup
+	case "popupBox":
+		return popupBox
+	case "t1ln":
+		return t1ln
+	case "t1en":
+		return t1en
+	case "t1ne":
+		return t1ne
+	case "t2ne":
+		return t2ne
+	}
+	return normal
 }

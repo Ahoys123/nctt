@@ -93,7 +93,7 @@ type pixel struct {
 	s     style
 }
 
-func CopyContent(r *Rect, w *TermWindow) VirtualRegion {
+func CopyContent(r *Rect, w Window) VirtualRegion {
 
 	vr := make(VirtualRegion, r.h)
 	for y := range vr {
@@ -112,7 +112,7 @@ func (vr VirtualRegion) GetContent(x, y int) *pixel {
 	return vr[y][x]
 }
 
-func (vr VirtualRegion) PasteContent(x, y int, w *TermWindow) {
+func (vr VirtualRegion) PasteContent(x, y int, w Window) {
 	for ny := 0; ny < len(vr); ny++ {
 		for nx := 0; nx < len(vr[ny]); nx++ {
 			px := vr.GetContent(nx, ny)
