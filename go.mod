@@ -1,25 +1,24 @@
-module example.com/m
+module github.com/Ahoys123/nct
 
 go 1.18
 
 require (
+	github.com/Ahoys123/tcell v0.0.0-20230102213152-a87126020b33
 	github.com/faiface/beep v1.1.0
-	github.com/gdamore/tcell/v2 v2.4.0
 )
 
 require (
 	github.com/gdamore/encoding v1.0.0 // indirect
-	github.com/hajimehoshi/go-mp3 v0.3.3
+	github.com/gdamore/tcell/v2 v2.5.4 // indirect
 	github.com/hajimehoshi/oto v0.7.1 // indirect
-	github.com/hajimehoshi/oto/v2 v2.3.0
-	github.com/lucasb-eyer/go-colorful v1.0.3 // indirect
-	github.com/mattn/go-runewidth v0.0.10 // indirect
+	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
+	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/rivo/uniseg v0.1.0 // indirect
+	github.com/rivo/uniseg v0.2.0 // indirect
 	golang.org/x/exp v0.0.0-20190306152737-a1d7652674e8 // indirect
 	golang.org/x/image v0.0.0-20190227222117-0694c2d4d067 // indirect
 	golang.org/x/mobile v0.0.0-20190415191353-3e0bab5405d6 // indirect
 	golang.org/x/sys v0.0.0-20220825204002-c680a09ffe64 // indirect
-	golang.org/x/term v0.0.0-20201210144234-2321bbc49cbf // indirect
-	golang.org/x/text v0.3.0 // indirect
+	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
+	golang.org/x/text v0.5.0 // indirect
 )

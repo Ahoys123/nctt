@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"github.com/gdamore/tcell/v2"
+	"github.com/Ahoys123/tcell"
 )
 
 type TermWindow struct {
@@ -22,10 +22,12 @@ func NewTermWindow(width, height int) *TermWindow {
 	if err := s.Init(); err != nil {
 		log.Fatalf("%+v", err)
 	}
+
+	s.SetSize(79, 20) // try resizing to optimal width
 	s.EnableMouse()
 	s.SetStyle(defStyle)
 	s.Clear()
-	w := TermWindow{s, &Rect{0, 0, width, height - 1}, width, height}
+	w := TermWindow{s, &Rect{0, 1, width, height - 1}, width, height}
 
 	DrawOverlay(&w)
 

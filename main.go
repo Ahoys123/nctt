@@ -2,8 +2,6 @@ package main
 
 import (
 	"time"
-
-	"github.com/gdamore/tcell/v2"
 )
 
 var w Window
@@ -13,8 +11,7 @@ var evChan chan event
 var cquit chan struct{}
 
 func main() {
-	println("v1")
-	w = NewWebWindow(79, 20)
+	w = NewTermWindow(79, 20)
 	scene = GetMainScene(w) //GetMainScene(w)
 	evChan, cquit = w.ChannelEvents()
 	startHTML()
@@ -45,9 +42,6 @@ updateloop:
 		case e := <-evChan:
 			inputs = append(inputs, e)
 			switch ev := e.(type) {
-			case *tcell.EventResize:
-				//saved = w.ResolutionCheck(ev, saved)
-				//w.Sync()
 			case *specialEvent:
 				switch ev.Key() {
 				case quit:
@@ -66,8 +60,8 @@ updateloop:
 // GetDemoScene gets the demo scene, made for Mrs. Andres & Ms. Burritto
 // as of April 10, 2022.
 func GetMainScene(w Window) Element {
-	var click SoundEffect = NewWebSfx("assets/click.wav") //NewSoundEffect("assets/click.wav")
-	var ding SoundEffect = NewWebSfx("assets/ding.wav")   // NewSoundEffect("assets/ding.wav")
+	var click SoundEffect = NewBeepSfx("assets/click.wav") //NewWebSfx("assets/click.wav")
+	var ding SoundEffect = NewBeepSfx("assets/ding.wav")   //NewWebSfx("assets/ding.wav")
 	width, height := w.GetWidth(), w.GetHeight()
 
 	return NewDiscretePlayer([]Element{

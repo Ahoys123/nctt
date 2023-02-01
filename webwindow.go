@@ -1,3 +1,5 @@
+//go:build exclude
+
 package main
 
 import "syscall/js"
@@ -26,7 +28,7 @@ func NewWebWindow(w, h int) *WebWindow {
 	ww := &WebWindow{make(map[[2]int]struct {
 		r rune
 		s string
-	}), js.Global().Get("document"), &Rect{0, 0, w, h - 1}, w, h, make(chan event)}
+	}), js.Global().Get("document"), &Rect{0, 1, w, h - 1}, w, h, make(chan event)}
 
 	DrawOverlay(ww)
 	return ww

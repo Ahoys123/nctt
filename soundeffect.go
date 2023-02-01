@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
+	"io"
 	"log"
-	"os"
+	"net/http"
 	"time"
 
 	"github.com/faiface/beep"
@@ -21,10 +23,12 @@ type BeepSfx struct {
 }
 
 func NewBeepSfx(filename string) (sfx *BeepSfx) {
-	f, err := os.Open(filename)
+	f, err := getContent(filename)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	defer f.Close()
 
 	streamer, format, err := wav.Decode(f)
 	if err != nil {
@@ -41,6 +45,19 @@ func NewBeepSfx(filename string) (sfx *BeepSfx) {
 	streamer.Close()
 
 	return sfx
+}
+
+func getContent(url string) (io.ReadCloser, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("GET error: %v", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("status error: %v", resp.StatusCode)
+	}
+
+	return resp.Body, nil
 }
 
 func (sfx *BeepSfx) Play() {
